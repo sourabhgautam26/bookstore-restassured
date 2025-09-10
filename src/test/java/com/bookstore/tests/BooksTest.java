@@ -15,8 +15,8 @@ public class BooksTest extends BaseSetup {
 
     String jsonPayload = TestUtil.readJsonFromFile("createBook.json");
 
-    @Test(priority = 1, dependsOnMethods = { "com.api.test.tests.AccountsTests.signUpUser",
-            "com.api.test.tests.AccountsTests.verifySignUpUserAndGenerateToken" }, description = "Add a new book")
+    @Test(priority = 1, dependsOnMethods = { "com.bookstore.tests.AccountsTests.signUpUser",
+            "com.bookstore.tests.AccountsTests.verifySignUpUserAndGenerateToken" }, description = "Add a new book")
     public void addBooksTest() {
         Response response = given()
                 .header("Authorization", "Bearer " + AccountsTests.token)
