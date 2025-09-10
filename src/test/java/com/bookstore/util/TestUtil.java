@@ -10,7 +10,7 @@ public class TestUtil {
     public static String readJsonFromFile(String fileName) {
         String jsonString = "";
         try {
-            String path = Paths.get("src", "test", "java", "com", "api", "test", "data", fileName).toString();
+            String path = Paths.get("src", "test", "java", "com", "bookstore", "data", fileName).toString();
             jsonString = new String(Files.readAllBytes(Paths.get(path)));
 
         } catch (Exception e) {
