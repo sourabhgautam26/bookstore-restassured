@@ -9,6 +9,7 @@
             <class name="com.bookstore.tests.AccountsTests"/>
             <class name="com.bookstore.tests.BooksTest"/>
             <class name="com.bookstore.tests.HealthCheckTest"/>
+            <class name="com.bookstore.tests.NegativeBooksTest"/>
 
         </classes>
     </test>
