@@ -1,4 +1,3 @@
-
 name: Run API Tests with Maven
 
 on:
@@ -28,6 +27,7 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+
       - name: Build and Test with Maven (with JaCoCo)
         run: mvn clean install jacoco:report
 
