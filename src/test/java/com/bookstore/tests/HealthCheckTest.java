@@ -1,30 +1,36 @@
 package com.bookstore.tests;
 
-import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import static io.restassured.RestAssured.given;
 
 import com.bookstore.base.BaseSetup;
-import com.bookstore.constants.ApiEndPoints;
+import com.bookstore.constants.APIRoutes;
+import com.bookstore.util.ResponseLogger;
+
 import org.testng.Assert;
+import org.testng.Reporter;
 import org.testng.annotations.Test;
 
 public class HealthCheckTest extends BaseSetup {
 
-    @Test(priority = 1, groups = "healthCheck", description = "Health check to check if server is up")
-    public void healthCheck() {
+    @Test(priority = 1, groups = "healthCheck", description = "Verify if the server health check endpoint is returning status UP")
+    public void validateHealthCheckEndpoint() {
+        Reporter.log("Executing Health Check API: " + APIRoutes.HEALTH_CHECK, true);
+
         Response response = given()
-                .log().all() // Log the request details
+                .log().all() // Log request
                 .when()
-                .get(ApiEndPoints.HEALTH_CHECK)
+                .get(APIRoutes.HEALTH_CHECK)
                 .then()
-                .log().all() // Log the response details
+                .log().all() // Log response
                 .statusCode(200)
                 .extract()
                 .response();
 
-        String status = response.jsonPath().getString("status");
-        Assert.assertEquals(status, "up", "Health check status mismatch");
-    }
+        // Attach response to report
+        ResponseLogger.attach("Heathcheck",response);
 
+        String status = response.jsonPath().getString("status");
+        Assert.assertEquals(status, "up", "Expected API health status to be 'up'");
+    }
 }

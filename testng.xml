@@ -1,7 +1,7 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 <suite name="APISuite">
     <listeners>
-        <listener class-name="com.bookstore.util.ExtentTestNGListener"/>
+        <listener class-name="com.bookstore.util.ApiTestReportListener"/>
     </listeners>
     <test name="APITests">
         <classes>

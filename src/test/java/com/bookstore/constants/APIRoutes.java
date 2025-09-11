@@ -1,6 +1,6 @@
 package com.bookstore.constants;
 
-public class ApiEndPoints {
+public class APIRoutes {
     public static final String SIGN_UP = "signup";
     public static final String LOGIN = "login";
     public static final String ADD_NEW_BOOK = "books/";

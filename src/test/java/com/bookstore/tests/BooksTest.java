@@ -3,11 +3,13 @@ package com.bookstore.tests;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import com.bookstore.base.BaseSetup;
-import com.bookstore.constants.ApiEndPoints;
+import com.bookstore.constants.APIRoutes;
 import com.bookstore.util.TestUtil;
+import com.bookstore.util.ResponseLogger;
 
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
+
 import static io.restassured.RestAssured.given;
 
 public class BooksTest extends BaseSetup {
@@ -16,89 +18,98 @@ public class BooksTest extends BaseSetup {
     String jsonPayload = TestUtil.readJsonFromFile("createBook.json");
 
     @Test(priority = 1, dependsOnMethods = { "com.bookstore.tests.AccountsTests.signUpUser",
-            "com.bookstore.tests.AccountsTests.verifySignUpUserAndGenerateToken" }, description = "Add a new book")
-    public void addBooksTest() {
+            "com.bookstore.tests.AccountsTests.verifySignUpUserAndGenerateToken" },
+            description = "Create a new book record in the system")
+    public void createBookRecord() {
+        // Extract response first
         Response response = given()
                 .header("Authorization", "Bearer " + AccountsTests.token)
-                .log().all() // Log the request details
+                .log().all()
                 .body(jsonPayload)
                 .when()
-                .post(ApiEndPoints.ADD_NEW_BOOK)
-                .then().log().all() // Log the response details
-                .statusCode(200).extract().response();
-        bookId = response.jsonPath().getInt("id");
-        Assert.assertNotNull(bookId, "Book ID should not be null");
+                .post(APIRoutes.ADD_NEW_BOOK)
+                .andReturn();
 
+        // Attach to reporter for listener
+        ResponseLogger.attach(jsonPayload,response);
+
+        // Assertions
+        Assert.assertEquals(response.getStatusCode(), 200, "Status code should be 201");
+        bookId = response.jsonPath().getInt("id");
+        Assert.assertNotNull(bookId, "Book ID should not be null after creation");
     }
 
-    @Test(priority = 2, dependsOnMethods = "addBooksTest", description = "Get book by ID")
-    public void getBookByIdTest() {
+    @Test(priority = 2, dependsOnMethods = "createBookRecord",
+            description = "Retrieve the created book by its ID")
+    public void fetchBookDetailsById() {
         Response response = given()
                 .header("Authorization", "Bearer " + AccountsTests.token)
-                // .pathParam("book_id", bookId)
-                .log().all() // Log the request details
+                .log().all()
                 .when()
-                .get(String.format(ApiEndPoints.GET_BOOK_ID, bookId))
-                .then()
-                .log().all() // Log the response details
-                .statusCode(200)
-                .extract().response();
-        Assert.assertTrue(response.jsonPath().getString("name").contains("The Silent Patient"),
-                "Book name should match");
+                .get(String.format(APIRoutes.GET_BOOK_ID, bookId))
+                .andReturn();
 
+        ResponseLogger.attach("GET request to /books/" + bookId,response);
+
+        Assert.assertEquals(response.getStatusCode(), 200, "Status code should be 200");
+        Assert.assertTrue(response.jsonPath().getString("name").contains("The Silent Patient"),
+                "Fetched book name should match the expected title");
     }
 
-    @Test(priority = 3, dependsOnMethods = "addBooksTest", description = "Update book by ID")
-    public void updateBookByIdTest() {
+    @Test(priority = 3, dependsOnMethods = "createBookRecord",
+            description = "Modify an existing book and verify the update")
+    public void modifyBookInformation() {
         String updatePayload = TestUtil.readJsonFromFile("updateBook.json");
+
         Response response = given()
                 .header("Authorization", "Bearer " + AccountsTests.token)
                 .body(updatePayload)
-                .log().all() // Log the request details
+                .log().all()
                 .when()
-                .put(String.format(ApiEndPoints.GET_BOOK_ID, bookId))
-                .then()
-                .log().all() // Log the response details
-                .statusCode(200)
-                .extract().response();
+                .put(String.format(APIRoutes.GET_BOOK_ID, bookId))
+                .andReturn();
+
+        ResponseLogger.attach(jsonPayload,response);
+
+        Assert.assertEquals(response.getStatusCode(), 200, "Status code should be 200");
 
         JsonPath expectedJson = new JsonPath(updatePayload);
         JsonPath actualJson = new JsonPath(response.asString());
         Assert.assertEquals(actualJson.getString("name"), expectedJson.getString("name"),
-                "Book name should match after update");
-
+                "Book title should reflect the updated value");
     }
 
-    @Test(priority = 4, dependsOnMethods = "addBooksTest", description = "Get all books")
-    public void getAllBooks() {
+    @Test(priority = 4, dependsOnMethods = "createBookRecord",
+            description = "Fetch the list of all available books")
+    public void listAllBooks() {
         Response response = given()
                 .header("Authorization", "Bearer " + AccountsTests.token)
-                .log().all() // Log the request details
+                .log().all()
                 .when()
-                .get(ApiEndPoints.GET_ALL_BOOKS)
-                .then()
-                .log().all() // Log the response details
-                .statusCode(200)
-                .extract().response();
+                .get(APIRoutes.GET_ALL_BOOKS)
+                .andReturn();
 
-        Assert.assertTrue(response.jsonPath().getList("books").size() > 0, "Books list should not be empty");
+        ResponseLogger.attach("GET request to /books/" + bookId,response);
 
+        Assert.assertEquals(response.getStatusCode(), 200, "Status code should be 200");
+        Assert.assertTrue(response.jsonPath().getList("books").size() > 0,
+                "The collection of books should not be empty");
     }
 
-    @Test(priority = 5, dependsOnMethods = "addBooksTest", description = "Delete book by ID")
-    public void deleteBookByIdTest() {
+    @Test(priority = 5, dependsOnMethods = "createBookRecord",
+            description = "Remove the created book using its ID")
+    public void removeBookById() {
         Response response = given()
                 .header("Authorization", "Bearer " + AccountsTests.token)
-                .log().all() // Log the request details
+                .log().all()
                 .when()
-                .delete(String.format(ApiEndPoints.GET_BOOK_ID, bookId))
-                .then()
-                .log().all() // Log the response details
-                .statusCode(200)
-                .extract().response();
+                .delete(String.format(APIRoutes.GET_BOOK_ID, bookId))
+                .andReturn();
+
+        ResponseLogger.attach("Delete request ,to /books/" + bookId,response);
+
+        Assert.assertEquals(response.getStatusCode(), 200, "Status code should be 200");
         Assert.assertTrue(response.jsonPath().getString("message").contains("Book deleted successfully"),
-                "book deleted message should match");
-
+                "The response should confirm book deletion");
     }
-
 }
