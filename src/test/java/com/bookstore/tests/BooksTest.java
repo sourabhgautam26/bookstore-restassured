@@ -52,7 +52,7 @@ public class BooksTest extends BaseSetup {
         ResponseLogger.attach("GET request to /books/" + bookId,response);
 
         Assert.assertEquals(response.getStatusCode(), 200, "Status code should be 200");
-        Assert.assertTrue(response.jsonPath().getString("name").contains("The Silent Patient"),
+        Assert.assertTrue(response.jsonPath().getString("name").contains("Echoes of Silence"),
                 "Fetched book name should match the expected title");
     }
 
